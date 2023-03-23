@@ -1,0 +1,5 @@
+#Successful Tests
+#Thu Mar 23 18:26:31 MSK 2023
+org.apache.spark.ml.made.StandardScalerTest=1679580021192
+org.apache.spark.ml.made.StartSparkTest=1679585176882
+org.apache.spark.ml.made.LinearRegressionTest=1679585191318
