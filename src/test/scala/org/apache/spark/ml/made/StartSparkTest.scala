@@ -1,16 +1,14 @@
 package org.apache.spark.ml.made
-import org.scalatest._
-import flatspec._
-import matchers._
-import org.apache.spark.sql.SparkSession
 
-@Ignore
-class StartSparkTest extends AnyFlatSpec with should.Matchers with WithSpark {
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
+class StartSparkTest extends AnyFlatSpec with Matchers with WithSpark {
 
   "Spark" should "start context" in {
     val s = spark
+    s.conf.getAll.foreach(u => println(u))
 
-    Thread.sleep(60000)
+    Thread.sleep(1000)
   }
-
 }

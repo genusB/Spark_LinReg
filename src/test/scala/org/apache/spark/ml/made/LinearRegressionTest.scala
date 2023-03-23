@@ -1,31 +1,28 @@
 package org.apache.spark.ml.made
 
 import org.apache.spark.ml.feature.VectorAssembler
-
 import org.apache.spark.sql.DataFrame
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import org.scalatest.flatspec.AnyFlatSpec
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import org.apache.spark.ml.linalg.Vectors.fromBreeze
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 import com.google.common.io.Files
+import org.scalatest.matchers.should.Matchers
 
-class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpark {
+class LinearRegressionTest extends AnyFlatSpec with Matchers with WithSpark {
 
-  val delta = 0.1
+  val delta = 0.01
   val w: DenseVector[Double] = LinearRegressionTest._w
   val b: Double = LinearRegressionTest._b
   val y: DenseVector[Double] = LinearRegressionTest._y
   val dataframe: DataFrame = LinearRegressionTest._dataframe
 
-  private def validateWeights(linreg: LinearRegressionModel): Unit = {
-    linreg.w.size should be (w.size)
+  private def validateWeights(linearRegressionModel: LinearRegressionModel): Unit = {
+    linearRegressionModel.w.size should be(w.size)
 
-    for (i <- 0 until w.size) {
-      linreg.w(i) should be(w(i) +- delta)
-    }
+    (0 until w.size).foreach(i => linearRegressionModel.w(i) should be(w(i) +- delta))
 
-    linreg.b should be(b +- delta)
+    linearRegressionModel.b should be(b +- delta)
   }
 
   private def validatePredictions(data: DataFrame): Unit = {
@@ -35,9 +32,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
 
     yPred.length should be(LinearRegressionTest.length)
 
-    for (i <- 0 until yPred.length) {
-      yPred(i) should be(y(i) +- delta)
-    }
+    yPred.indices.foreach(i => yPred(i) should be(y(i) +- delta))
   }
 
   "Estimator" should "fit model" in {
@@ -52,7 +47,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
   }
 
   "Model" should "make predictions" in {
-    val model = new LinearRegressionModel(w=fromBreeze(w).toDense, b=b)
+    val model = new LinearRegressionModel(w = fromBreeze(w).toDense, b = b)
       .setInputCol("x")
       .setLabelCol("y")
       .setOutputCol("pred")
@@ -66,8 +61,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       .setLabelCol("y")
       .setOutputCol("pred")
 
-    val pipeline = new Pipeline()
-      .setStages(Array(estimator))
+    val pipeline = new Pipeline().setStages(Array(estimator))
 
     val tempDir = Files.createTempDir()
     pipeline.write.overwrite().save(tempDir.getAbsolutePath)
@@ -87,8 +81,7 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
       .setLabelCol("y")
       .setOutputCol("pred")
 
-    val pipeline = new Pipeline()
-      .setStages(Array(estimator))
+    val pipeline = new Pipeline().setStages(Array(estimator))
 
     val tempDir = Files.createTempDir()
 
@@ -112,12 +105,13 @@ object LinearRegressionTest extends WithSpark {
   lazy val _b: Double = 3.0
   lazy val _y: DenseVector[Double] = _x * _w + _b
 
-  lazy val _matrix = DenseMatrix.horzcat(_x, _y.asDenseMatrix.t)
-  lazy val _data = _matrix(*, ::).iterator
+  lazy val _matrix: DenseMatrix[Double] = DenseMatrix.horzcat(_x, _y.asDenseMatrix.t)
+  lazy val _data: DataFrame = _matrix(*, ::).iterator
     .map(x => Tuple3(x(0), x(1), x(2)))
-    .toSeq.toDF("x1", "x2", "y")
+    .toSeq
+    .toDF("x1", "x2", "y")
 
-  lazy val _assembler = new VectorAssembler()
+  lazy val _assembler: VectorAssembler = new VectorAssembler()
     .setInputCols(Array("x1", "x2"))
     .setOutputCol("x")
 
